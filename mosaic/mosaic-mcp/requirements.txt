@@ -1,0 +1,13 @@
+groq
+langchain
+chromadb
+faiss-cpu
+transformers
+torch
+sentence-transformers
+opencv-python
+Pillow
+numpy
+ffmpeg-python
+python-dotenv
+fastmcp
