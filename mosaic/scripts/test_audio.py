@@ -1,8 +1,10 @@
 from groq import Groq
 import os
 import subprocess
+from dotenv import load_dotenv
+load_dotenv()
 from typing import Dict
-groq_client = Groq(api_key="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")
+groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 
 def transcribe_with_groq(audio_path: str, language: str = "en") -> Dict:
