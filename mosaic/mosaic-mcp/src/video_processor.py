@@ -71,14 +71,25 @@ def extract_keyframes_ffmpeg(video_path: str, output_dir: str) -> List[str]:
     os.makedirs(output_dir, exist_ok=True)
     output_pattern = os.path.join(output_dir, 'frame_%04d.jpg')
 
+    # cmd = [
+    #     "ffmpeg",
+    #     "-i", video_path,
+    #     "-vf", f"select='not(mod(n\,{N}))'",
+    #     "-vsync", "vfr",
+    #     "-q:v", "2",
+    #     output_pattern
+    # ]
+
     cmd = [
         "ffmpeg",
         "-i", video_path,
-        "-vf", f"select='not(mod(n\,{N}))'",
+        "-vf", fr"select='not(mod(n\,{N}))'",
         "-vsync", "vfr",
         "-q:v", "2",
         output_pattern
     ]
+
+    
 
     subprocess.run(cmd, capture_output=True, check=True)
 
@@ -329,15 +340,15 @@ class VideoProcessingPipeline():
         }
     
 
-pipeline = VideoProcessingPipeline(
-    storage_dir="mosaic/extracted_frames"
-)
+# pipeline = VideoProcessingPipeline(
+#     storage_dir="mosaic/extracted_frames"
+# )
 
-res = pipeline.process_video(
-    video_path="mosaic/my_video.mp4.webm",
-    video_id="video_001"
-)
+# res = pipeline.process_video(
+#     video_path="mosaic/my_video.mp4.webm",
+#     video_id="video_001"
+# )
 
-import pprint
+# import pprint
 
-pprint.pprint(res)
+# pprint.pprint(res)

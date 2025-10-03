@@ -118,6 +118,29 @@ class MultimodalSearchEngine:
                     "clip_duration": clip_duration
                 })
         return results
+    
+    def summarize_video(self, video_id: str, max_length: int = 100):
+        collection_name = f"video_{video_id}"
+        try:
+            collection = self.chroma_client.get_collection(name=collection_name)
+        except Exception as e:
+            raise ValueError(f"Transcript collection not found for video '{video_id}': {e}")
+
+        # Retrieve all transcript segments
+        results = collection.query(
+            n_results=1000,  # Arbitrary large number to get all segments
+            where={"type": "transcript_segment"}
+        )
+
+        full_transcript = " ".join(results["documents"][0])
+        
+        # Simple summarization by truncation (replace with actual summarization model if needed)
+        summary = " ".join(full_transcript.split()[:max_length])
+        return {
+            "status": "success",
+            "video_id": video_id,
+            "summary": summary
+        }
 
     def search_caption(self, query: str, video_id: str, k: int = 5, fps: float = 30.0):
         collection_name = f"frames_{video_id}"
@@ -227,23 +250,23 @@ def get_video_clips_from_hits(
 
 # Example usage
 
-if __name__ == "__main__":
-    search_engine = MultimodalSearchEngine(storage_dir="mosaic/extracted_frames")
-    # Replace these with your actual values
-    query_image = "mosaic/image.png"
-    video_id = "video_001"
-    fps = 30.0
-    video_file = "mosaic/my_video.mp4.webm"
-    output_clips_dir = "clips_output"
+# if __name__ == "__main__":
+#     search_engine = MultimodalSearchEngine(storage_dir="mosaic/extracted_frames")
+#     # Replace these with your actual values
+#     query_image = "mosaic/image.png"
+#     video_id = "video_001"
+#     fps = 30.0
+#     video_file = "mosaic/my_video.mp4.webm"
+#     output_clips_dir = "clips_output"
 
-    image_results = search_engine.search_image(query_image_path=query_image, video_id=video_id, k=3, fps=fps)
-    pprint.pprint(image_results)
+#     image_results = search_engine.search_image(query_image_path=query_image, video_id=video_id, k=3, fps=fps)
+#     pprint.pprint(image_results)
 
-    # Generate clips for hits
-    clips = get_video_clips_from_hits(
-        video_path=video_file,
-        hits=image_results,
-        output_dir=output_clips_dir,
-        prefix="image_clip"
-    )
-    print(f"Extracted {len(clips)} clips to '{output_clips_dir}'")
+#     # Generate clips for hits
+#     clips = get_video_clips_from_hits(
+#         video_path=video_file,
+#         hits=image_results,
+#         output_dir=output_clips_dir,
+#         prefix="image_clip"
+#     )
+#     print(f"Extracted {len(clips)} clips to '{output_clips_dir}'")
