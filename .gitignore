@@ -30,7 +30,7 @@ yarn-error.log*
 **/clips_output/
 **/chroma_db/
 extracted_frames/
-assets/
+
 
 # IDE
 .vscode/
