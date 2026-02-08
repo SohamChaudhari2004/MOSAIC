@@ -1,34 +1,94 @@
+version: "3.8"
+
 services:
   mcp-server:
-    build: ./mosaic-mcp
+    build:
+      context: ./mosaic-mcp
+      dockerfile: Dockerfile
     container_name: mosaic-mcp
+    restart: unless-stopped
     ports:
       - "9090:9090"
     volumes:
-      - ./storage:/app/storage
+      - storage_data:/app/storage
+      - chroma_data:/app/src/chroma_db
     environment:
       - LOG_LEVEL=INFO
-    
+      - PYTHONUNBUFFERED=1
+    env_file:
+      - .env
+    networks:
+      - mosaic-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import requests; requests.get('http://localhost:9090/health')",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
   api-server:
-    build: ./mosaic-api
+    build:
+      context: ./mosaic-api
+      dockerfile: Dockerfile
     container_name: mosaic-api
+    restart: unless-stopped
     ports:
       - "8000:8000"
     depends_on:
-      - mcp-server
+      mcp-server:
+        condition: service_healthy
+    volumes:
+      - storage_data:/app/storage
+      - clips_data:/app/clips_output
     environment:
       - MCP_SERVER_URL=http://mcp-server:9090
-      - DATABASE_URL=sqlite:///./mosaic.db
-    volumes:
-      - ./storage:/app/storage
-    
+      - DATABASE_URL=sqlite:///./storage/mosaic.db
+      - PYTHONUNBUFFERED=1
+    env_file:
+      - .env
+    networks:
+      - mosaic-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
   frontend:
-    build: ./mosaic-ui
+    build:
+      context: ./mosaic-ui
+      dockerfile: Dockerfile
     container_name: mosaic-ui
+    restart: unless-stopped
     ports:
       - "3000:3000"
     depends_on:
-      - api-server
+      api-server:
+        condition: service_healthy
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:8000
       - NEXT_TELEMETRY_DISABLED=1
+      - NODE_ENV=production
+    env_file:
+      - .env
+    networks:
+      - mosaic-network
+
+networks:
+  mosaic-network:
+    driver: bridge
+
+volumes:
+  storage_data:
+    driver: local
+  chroma_data:
+    driver: local
+  clips_data:
+    driver: local

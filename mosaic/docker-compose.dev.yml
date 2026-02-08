@@ -1,0 +1,92 @@
+version: "3.8"
+
+services:
+  mcp-server:
+    build:
+      context: ./mosaic-mcp
+      dockerfile: Dockerfile
+    container_name: mosaic-mcp-dev
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      # Mount source code for hot reload
+      - ./mosaic-mcp/src:/app/src
+      - ./mosaic-mcp/tests:/app/tests
+      - ./storage:/app/storage
+      - ./mosaic-mcp/src/chroma_db:/app/src/chroma_db
+    environment:
+      - LOG_LEVEL=DEBUG
+      - PYTHONUNBUFFERED=1
+      - WATCHFILES_FORCE_POLLING=true
+    env_file:
+      - .env
+    networks:
+      - mosaic-network
+    command: ["python", "-u", "src/server.py"]
+
+  api-server:
+    build:
+      context: ./mosaic-api
+      dockerfile: Dockerfile
+    container_name: mosaic-api-dev
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mcp-server
+    volumes:
+      # Mount source code for hot reload
+      - ./mosaic-api/app:/app/app
+      - ./mosaic-api/tests:/app/tests
+      - ./storage:/app/storage
+      - ./mosaic-api/clips_output:/app/clips_output
+    environment:
+      - MCP_SERVER_URL=http://mcp-server:9090
+      - DATABASE_URL=sqlite:///./storage/mosaic.db
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=DEBUG
+    env_file:
+      - .env
+    networks:
+      - mosaic-network
+    command:
+      [
+        "uvicorn",
+        "app.api:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000",
+        "--reload",
+      ]
+
+  frontend:
+    build:
+      context: ./mosaic-ui
+      dockerfile: Dockerfile
+      target: deps # Use deps stage for development
+    container_name: mosaic-ui-dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api-server
+    volumes:
+      # Mount source code for hot reload
+      - ./mosaic-ui:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NEXT_TELEMETRY_DISABLED=1
+      - NODE_ENV=development
+    env_file:
+      - .env
+    networks:
+      - mosaic-network
+    command: ["npm", "run", "dev"]
+
+networks:
+  mosaic-network:
+    driver: bridge

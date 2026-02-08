@@ -1,0 +1,75 @@
+[project]
+name = "mosaic"
+version = "1.0.0"
+description = "MOSAIC - Multimodal Orchestration for Synthesis, Analysis & Intelligent Comprehension"
+authors = [
+    {name = "MOSAIC Team"}
+]
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+keywords = [
+    "video-analysis",
+    "ai",
+    "multimodal",
+    "computer-vision",
+    "nlp",
+    "fastapi",
+    "nextjs",
+    "langchain",
+    "mcp"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Multimedia :: Video",
+]
+
+[project.urls]
+Homepage = "https://github.com/yourusername/mosaic"
+Documentation = "https://github.com/yourusername/mosaic/docs"
+Repository = "https://github.com/yourusername/mosaic"
+Issues = "https://github.com/yourusername/mosaic/issues"
+
+[build-system]
+requires = ["setuptools>=68.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.black]
+line-length = 100
+target-version = ['py311']
+extend-exclude = '''
+/(
+    \.git
+  | \.venv
+  | venv
+  | build
+  | dist
+  | node_modules
+  | \.next
+)/
+'''
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = [
+    ".git",
+    ".venv",
+    "venv",
+    "node_modules",
+    ".next",
+    "build",
+    "dist",
+]
+
+[tool.isort]
+profile = "black"
+line_length = 100
+skip_gitignore = true
