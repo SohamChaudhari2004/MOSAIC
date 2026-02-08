@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.venv/
+venv/
+
+mosaic/mosaic-mcp/src/mosaic/extracted_frames/
+# Node
+node_modules/
+dist/
+.pnpm-store/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment
+.env
+.env.local
+*.local
+    
+# Storage
+storage/videos/*
+storage/frames/*
+storage/embeddings/*
+!storage/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+*.log
+
+
+my_video.mp4.webm
+nana_welcome.mp4
+
+extract_frames/
+
+Recording (2).m4a
+
+clips_output/
+
+chroma_db/

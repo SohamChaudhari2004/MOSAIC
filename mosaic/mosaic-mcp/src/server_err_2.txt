@@ -1,0 +1,26 @@
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+[11/29/25 15:22:28] INFO     Use pytorch             SentenceTransformer.py:219
+                             device_name: cpu                                  
+                    INFO     Load pretrained         SentenceTransformer.py:227
+                             SentenceTransformer:                              
+                             clip-ViT-B-32                                     
+[11/29/25 15:22:32] INFO     Use pytorch             SentenceTransformer.py:219
+                             device_name: cpu                                  
+                    INFO     Load pretrained         SentenceTransformer.py:227
+                             SentenceTransformer:                              
+                             all-MiniLM-L6-v2                                  
+[11/29/25 15:22:36] INFO     Anonymized telemetry enabled. See    posthog.py:22
+                             https://docs.trychroma.com/telemetry              
+                             for more information.                             
+INFO:     Started server process [18140]
+INFO:     Waiting for application startup.
+                    INFO     StreamableHTTP      streamable_http_manager.py:110
+                             session manager                                   
+                             started                                           
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:9091 (Press CTRL+C to quit)
+forrtl: error (200): program aborting due to window-CLOSE event
+Image              PC                Routine            Line        Source             
+KERNELBASE.dll     00007FFEC6AEC24D  Unknown               Unknown  Unknown
+KERNEL32.DLL       00007FFEC8E6E8D7  Unknown               Unknown  Unknown
+ntdll.dll          00007FFEC924C53C  Unknown               Unknown  Unknown

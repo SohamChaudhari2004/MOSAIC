@@ -1,0 +1,34 @@
+services:
+  mcp-server:
+    build: ./mosaic-mcp
+    container_name: mosaic-mcp
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./storage:/app/storage
+    environment:
+      - LOG_LEVEL=INFO
+    
+  api-server:
+    build: ./mosaic-api
+    container_name: mosaic-api
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mcp-server
+    environment:
+      - MCP_SERVER_URL=http://mcp-server:9090
+      - DATABASE_URL=sqlite:///./mosaic.db
+    volumes:
+      - ./storage:/app/storage
+    
+  frontend:
+    build: ./mosaic-ui
+    container_name: mosaic-ui
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api-server
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NEXT_TELEMETRY_DISABLED=1

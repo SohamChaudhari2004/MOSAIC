@@ -1,0 +1,4 @@
+Mosaic MCP Server - Requested: 127.0.0.1:9091
+Starting Mosaic MCP Server on 127.0.0.1:9091
+Running streamable-http transport on 127.0.0.1:9091
+INFO:     127.0.0.1:55054 - "POST /mcp/v1/tools/list_videos HTTP/1.1" 200 OK
