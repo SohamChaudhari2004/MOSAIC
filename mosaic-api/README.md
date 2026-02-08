@@ -5,6 +5,7 @@ FastAPI backend for MOSAIC - LangChain agent orchestration and REST API endpoint
 ## 📋 Overview
 
 The `mosaic-api` is the core backend service that handles:
+
 - REST API endpoints for video management
 - LangChain ReAct agent for intelligent query processing
 - MCP (Model Context Protocol) client integration
@@ -190,6 +191,7 @@ class MCPClient:
 ## 📊 Data Models
 
 ### Video Schema
+
 ```python
 class Video(BaseModel):
     id: str
@@ -202,6 +204,7 @@ class Video(BaseModel):
 ```
 
 ### Chat Message
+
 ```python
 class ChatMessage(BaseModel):
     role: str  # "user" or "assistant"
@@ -211,6 +214,7 @@ class ChatMessage(BaseModel):
 ```
 
 ### Search Result
+
 ```python
 class SearchResult(BaseModel):
     frame_number: int
@@ -320,6 +324,7 @@ uvicorn app.api:app --reload
 ## 📚 API Documentation
 
 Once the server is running:
+
 - **Swagger UI**: http://localhost:8000/docs
 - **ReDoc**: http://localhost:8000/redoc
 - **OpenAPI JSON**: http://localhost:8000/openapi.json
@@ -334,6 +339,7 @@ Once the server is running:
 ## 📞 Troubleshooting
 
 ### MCP Server Connection Failed
+
 ```bash
 # Check if MCP server is running
 curl http://localhost:9090/health
@@ -343,6 +349,7 @@ echo $MCP_SERVER_URL
 ```
 
 ### File Upload Fails
+
 ```bash
 # Check storage directory exists
 mkdir -p storage/uploads
@@ -352,6 +359,7 @@ chmod 755 storage/
 ```
 
 ### Agent Not Responding
+
 ```bash
 # Verify API key
 echo $MISTRAL_API_KEY

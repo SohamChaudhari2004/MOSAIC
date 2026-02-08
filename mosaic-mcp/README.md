@@ -5,6 +5,7 @@ FastMCP server for video processing, embedding generation, and intelligent searc
 ## 📋 Overview
 
 The `mosaic-mcp` is the Model Context Protocol server that provides:
+
 - Video frame extraction and processing
 - Audio transcription using Whisper
 - Image captioning with vision models
@@ -31,17 +32,20 @@ mosaic-mcp/
 ## 🔧 Technology Stack
 
 ### Core Technologies
+
 - **FastMCP** - Model Context Protocol server
 - **FFmpeg** - Video/audio processing
 - **OpenCV** - Computer vision
 
 ### AI Models
+
 - **CLIP (ViT-B-32)** - Visual-semantic embeddings
 - **Whisper Large V3 Turbo** - Audio transcription (Groq)
 - **Llama 4 Maverick** - Image captioning (Groq)
 - **all-MiniLM-L6-v2** - Text embeddings
 
 ### Vector Databases
+
 - **FAISS** - Fast similarity search for images
 - **ChromaDB** - Persistent vector database for text
 
@@ -98,6 +102,7 @@ Process and index a video file for search.
 ```
 
 **Pipeline:**
+
 1. Extract frames (1 per second)
 2. Transcribe audio with Whisper
 3. Generate image captions
@@ -217,6 +222,7 @@ ffmpeg -i input.mp4 -vf fps=1 frame_%04d.jpg
 ```
 
 **Configuration:**
+
 - Frame rate: 1 fps (configurable)
 - Format: JPEG
 - Resolution: Original (can be resized)
@@ -234,6 +240,7 @@ transcription = groq.audio.transcriptions.create(
 ```
 
 **Features:**
+
 - Word-level timestamps
 - Speaker diarization support
 - Multiple language support
@@ -256,6 +263,7 @@ caption = groq.chat.completions.create(
 ```
 
 **Output:**
+
 - Detailed scene descriptions
 - Object identification
 - Action detection
@@ -263,6 +271,7 @@ caption = groq.chat.completions.create(
 ### Embedding Generation
 
 #### CLIP Embeddings (Images)
+
 ```python
 from sentence_transformers import SentenceTransformer
 
@@ -274,6 +283,7 @@ embeddings = model.encode(images)
 **Index:** FAISS (IndexFlatL2)
 
 #### Text Embeddings
+
 ```python
 model = SentenceTransformer('all-MiniLM-L6-v2')
 embeddings = model.encode(texts)
@@ -291,14 +301,15 @@ class SearchEngine:
     def search_visual(self, query_text, top_k=5):
         # Encode query with CLIP
         query_embedding = self.clip_model.encode([query_text])
-        
+
         # Search FAISS index
         distances, indices = self.faiss_index.search(query_embedding, top_k)
-        
+
         return results
 ```
 
 **Performance:**
+
 - ~0.1ms per query
 - Handles millions of vectors
 - GPU acceleration support
@@ -314,6 +325,7 @@ results = collection.query(
 ```
 
 **Features:**
+
 - Persistent storage
 - Metadata filtering
 - Automatic embedding generation
@@ -513,6 +525,7 @@ async def my_new_tool(video_id: str) -> dict:
 ## 📞 Troubleshooting
 
 ### FFmpeg Not Found
+
 ```bash
 # Install FFmpeg
 sudo apt-get install ffmpeg  # Ubuntu/Debian
@@ -521,6 +534,7 @@ brew install ffmpeg          # macOS
 ```
 
 ### Model Download Fails
+
 ```bash
 # Models auto-download on first use
 # Check internet connection and disk space
@@ -531,6 +545,7 @@ python -c "from sentence_transformers import SentenceTransformer; \
 ```
 
 ### Out of Memory
+
 ```bash
 # Reduce batch size
 BATCH_SIZE=16
@@ -541,6 +556,7 @@ pip install faiss-cpu
 ```
 
 ### Groq API Errors
+
 ```bash
 # Check API key
 echo $GROQ_API_KEY

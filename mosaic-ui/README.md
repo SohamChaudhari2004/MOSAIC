@@ -5,6 +5,7 @@ Next.js 15 frontend for MOSAIC - Modern, responsive web interface for video anal
 ## 📋 Overview
 
 The `mosaic-ui` is the web frontend that provides:
+
 - Video upload interface with drag & drop
 - Interactive chat with AI agent
 - Real-time video search
@@ -80,12 +81,14 @@ npm start
 ### Home Page (`/`)
 
 Main application interface with:
+
 - Video upload area
 - Chat interface
 - Video library sidebar
 - Search results display
 
 ### Future Routes (Planned)
+
 - `/videos/:id` - Video detail page
 - `/clips` - Generated clips library
 - `/settings` - User settings
@@ -98,13 +101,11 @@ Main application interface with:
 Main chat interface for interacting with videos.
 
 ```tsx
-<ChatArea
-  videoId={currentVideoId}
-  onSendMessage={handleMessage}
-/>
+<ChatArea videoId={currentVideoId} onSendMessage={handleMessage} />
 ```
 
 **Features:**
+
 - Message history display
 - Typing indicator
 - Auto-scroll to latest message
@@ -124,6 +125,7 @@ Video library and navigation.
 ```
 
 **Features:**
+
 - Video thumbnail previews
 - Upload progress indicator
 - Video metadata display
@@ -133,20 +135,13 @@ Video library and navigation.
 ### VideoPlayer (Coming Soon)
 
 ```tsx
-<VideoPlayer
-  videoId={videoId}
-  startTime={120}
-  autoPlay={true}
-/>
+<VideoPlayer videoId={videoId} startTime={120} autoPlay={true} />
 ```
 
 ### SearchResults (Coming Soon)
 
 ```tsx
-<SearchResults
-  results={results}
-  onFrameClick={handleFrameClick}
-/>
+<SearchResults results={results} onFrameClick={handleFrameClick} />
 ```
 
 ## 🔌 API Integration
@@ -157,25 +152,25 @@ Video library and navigation.
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
 // Upload video
 export const uploadVideo = async (file: File) => {
   const formData = new FormData();
-  formData.append('file', file);
-  return api.post('/api/videos/upload', formData);
+  formData.append("file", file);
+  return api.post("/api/videos/upload", formData);
 };
 
 // Send chat message
 export const sendMessage = async (message: string, videoId: string) => {
-  return api.post('/api/chat', { message, video_id: videoId });
+  return api.post("/api/chat", { message, video_id: videoId });
 };
 
 // Search videos
 export const searchVideo = async (query: string, videoId: string) => {
-  return api.post('/api/search/combined', {
+  return api.post("/api/search/combined", {
     query,
     video_id: videoId,
     top_k: 10,
@@ -327,9 +322,9 @@ NEXT_TELEMETRY_DISABLED=1
 ```typescript
 // next.config.ts
 const nextConfig = {
-  output: 'standalone', // For Docker
+  output: "standalone", // For Docker
   images: {
-    domains: ['localhost'],
+    domains: ["localhost"],
   },
   experimental: {
     serverActions: true,
@@ -384,10 +379,10 @@ theme: {
 
 ```typescript
 // app/layout.tsx
-import { Inter, Roboto_Mono } from 'next/font/google';
+import { Inter, Roboto_Mono } from "next/font/google";
 
-const inter = Inter({ subsets: ['latin'] });
-const robotoMono = Roboto_Mono({ subsets: ['latin'] });
+const inter = Inter({ subsets: ["latin"] });
+const robotoMono = Roboto_Mono({ subsets: ["latin"] });
 ```
 
 ## 🐛 Debugging
@@ -410,13 +405,13 @@ Install the React DevTools browser extension for component inspection.
 
 ```typescript
 // lib/api.ts
-api.interceptors.request.use(request => {
-  console.log('Starting Request', request);
+api.interceptors.request.use((request) => {
+  console.log("Starting Request", request);
   return request;
 });
 
-api.interceptors.response.use(response => {
-  console.log('Response:', response);
+api.interceptors.response.use((response) => {
+  console.log("Response:", response);
   return response;
 });
 ```
@@ -426,7 +421,7 @@ api.interceptors.response.use(response => {
 ### Image Optimization
 
 ```tsx
-import Image from 'next/image';
+import Image from "next/image";
 
 <Image
   src="/video-thumbnail.jpg"
@@ -435,14 +430,14 @@ import Image from 'next/image';
   height={180}
   loading="lazy"
   placeholder="blur"
-/>
+/>;
 ```
 
 ### Code Splitting
 
 ```tsx
 // Dynamic imports for heavy components
-const HeavyComponent = dynamic(() => import('./HeavyComponent'), {
+const HeavyComponent = dynamic(() => import("./HeavyComponent"), {
   loading: () => <LoadingSpinner />,
   ssr: false,
 });
@@ -451,12 +446,12 @@ const HeavyComponent = dynamic(() => import('./HeavyComponent'), {
 ### Memoization
 
 ```tsx
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback } from "react";
 
 const MemoizedComponent = React.memo(({ data }) => {
   const processed = useMemo(() => processData(data), [data]);
   const handler = useCallback(() => handleEvent(), []);
-  
+
   return <div>{processed}</div>;
 });
 ```
