@@ -4,7 +4,6 @@ VideoAgent using LangChain MCP adapters for official MCP integration.
 This module provides a VideoAgent that connects to the MCP server using
 the official langchain-mcp-adapters library.
 
-Reference: https://docs.langchain.com/oss/python/langchain/mcp
 """
 
 import asyncio

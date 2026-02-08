@@ -473,6 +473,143 @@ rm -rf storage/mosaic.db
 
 ---
 
+## 🚀 GPU Acceleration with Docker
+
+Enable NVIDIA GPU acceleration for 10-50x faster video processing.
+
+### Prerequisites
+
+1. **NVIDIA GPU** with CUDA support
+2. **NVIDIA drivers** installed on host
+3. **NVIDIA Container Toolkit**:
+
+```bash
+# Ubuntu/Debian
+distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
+curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add -
+curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | \
+  sudo tee /etc/apt/sources.list.d/nvidia-docker.list
+
+sudo apt-get update && sudo apt-get install -y nvidia-container-toolkit
+sudo systemctl restart docker
+```
+
+**Verify installation:**
+
+```bash
+docker run --rm --gpus all nvidia/cuda:11.8.0-base-ubuntu22.04 nvidia-smi
+```
+
+### Enable GPU in Docker Compose
+
+**Option 1: Use GPU compose override (Recommended)**
+
+```bash
+# Start with GPU support
+docker-compose -f docker-compose.yml -f docker-compose.gpu.yml up -d
+
+# Check GPU is detected
+docker exec mosaic-mcp python -c "import torch; print('GPU:', torch.cuda.is_available())"
+```
+
+**Option 2: Uncomment GPU config in docker-compose.yml**
+
+```yaml
+services:
+  mcp-server:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1 # or 'all' for all GPUs
+              capabilities: [gpu]
+```
+
+### GPU Configuration
+
+Set in `.env`:
+
+```bash
+# Use CUDA GPU
+DEVICE=cuda
+
+# Or auto-detect (recommended)
+DEVICE=auto
+
+# Force CPU (for testing)
+DEVICE=cpu
+```
+
+### Docker Image with GPU
+
+Update `mosaic-mcp/Dockerfile` to use CUDA base image:
+
+```dockerfile
+# Use CUDA-enabled base image
+FROM nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04
+
+# Install Python
+RUN apt-get update && apt-get install -y python3.11 python3-pip
+
+# Install PyTorch with CUDA
+RUN pip install torch --index-url https://download.pytorch.org/whl/cu118
+
+# Install FAISS GPU (optional)
+RUN pip install faiss-gpu
+
+# Continue with normal setup...
+```
+
+### Verify GPU Usage
+
+```bash
+# Check GPU is available in container
+docker exec mosaic-mcp nvidia-smi
+
+# Check PyTorch sees GPU
+docker exec mosaic-mcp python -c "import torch; print('CUDA:', torch.cuda.is_available(), 'Device:', torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'N/A')"
+
+# Monitor GPU usage during processing
+watch -n 1 nvidia-smi
+```
+
+### Troubleshooting GPU in Docker
+
+**Issue: "could not select device driver"**
+
+```bash
+# Restart Docker daemon
+sudo systemctl restart docker
+
+# Check NVIDIA runtime is configured
+docker info | grep -i runtime
+```
+
+**Issue: GPU not detected in container**
+
+```bash
+# Verify host can see GPU
+nvidia-smi
+
+# Check container has GPU access
+docker run --rm --gpus all nvidia/cuda:11.8.0-base-ubuntu22.04 nvidia-smi
+```
+
+**Issue: CUDA version mismatch**
+
+```bash
+# Check host CUDA version
+nvidia-smi
+
+# Use matching CUDA base image in Dockerfile
+FROM nvidia/cuda:XX.X.X-cudnn8-runtime-ubuntu22.04
+```
+
+> 📖 **Full GPU Guide**: See [docs/GPU_SETUP.md](docs/GPU_SETUP.md) for detailed GPU configuration
+
+---
+
 ## 📚 Additional Resources
 
 - [Docker Documentation](https://docs.docker.com/)

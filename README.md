@@ -7,12 +7,19 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript)](https://www.typescriptlang.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688.svg)](https://fastapi.tiangolo.com/)
-[![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](https://www.docker.com/)
+[![LangChain](https://img.shields.io/badge/LangChain-0.3-1C3C3C?logo=langchain)](https://www.langchain.com/)
+[![Docker](https://img.shields.io/badge/docker-ready-2496ED?logo=docker)](https://www.docker.com/)
+[![ChromaDB](https://img.shields.io/badge/ChromaDB-vector-FF6B6B)](https://www.trychroma.com/)
+[![FAISS](https://img.shields.io/badge/FAISS-search-00ADD8)](https://faiss.ai/)
+[![Groq](https://img.shields.io/badge/Groq-AI-orange)](https://groq.com/)
+[![Mistral](https://img.shields.io/badge/Mistral-LLM-ff7000)](https://mistral.ai/)
+[![FFmpeg](https://img.shields.io/badge/FFmpeg-video-007808?logo=ffmpeg)](https://ffmpeg.org/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.4.1-EE4C2C?logo=pytorch)](https://pytorch.org/)
 
 **AI-powered video analysis platform for multimodal content understanding and intelligent search**
-
-[Features](#-features) • [Quick Start](#-quick-start) • [Documentation](#-documentation) • [Architecture](#-architecture) • [API](#-api-reference)
 
 </div>
 
@@ -21,6 +28,7 @@
 ## 📋 Table of Contents
 
 - [Overview](#-overview)
+- [Demo & Screenshots](#-demo--screenshots)
 - [Features](#-features)
 - [Architecture](#-architecture)
 - [Quick Start](#-quick-start)
@@ -51,6 +59,48 @@
 
 ---
 
+## 🎥 Demo & Screenshots
+
+### Application Interface
+
+<div align="center">
+  <img src="assets/MosaicSS.png" alt="MOSAIC Interface" width="800"/>
+  <p><em>MOSAIC's intuitive chat interface for video analysis</em></p>
+</div>
+
+### Video Examples
+
+Watch MOSAIC in action:
+
+#### Example 1: Visual Search & Frame Analysis
+
+<video width="800" controls>
+  <source src="assets/Mosaic_out2.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
+_Demonstrates visual similarity search and frame-by-frame analysis capabilities_
+
+#### Example 2: Transcript Search & Clip Generation
+
+<video width="800" controls>
+  <source src="assets/Mosaic_out1.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
+_Shows intelligent transcript search and automatic clip extraction from search results_
+
+#### Example 3: Multi-Modal Query Processing
+
+<video width="800" controls>
+  <source src="assets/Mosaic_out3.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
+_Highlights natural language queries combining visual and textual search across video content_
+
+---
+
 ## ✨ Features
 
 ### Core Capabilities
@@ -74,6 +124,30 @@
 - **LLM**: `mistral-large-latest` for intelligent agent reasoning
 - **Framework**: LangChain ReAct agent for orchestration
 
+### 🚀 GPU Acceleration
+
+MOSAIC supports **NVIDIA GPU acceleration** for significantly faster processing:
+
+- **10-50x faster** video processing and embedding generation
+- **Automatic GPU detection** - just set `DEVICE=auto` in `.env`
+- **CUDA-accelerated** FAISS vector search
+- **Compatible** with RTX, GTX, Tesla GPUs (CUDA 11.8+)
+
+> 📖 **Setup Guide**: See [docs/GPU_SETUP.md](docs/GPU_SETUP.md) for detailed installation and optimization
+
+**Quick Start:**
+
+```bash
+# Install PyTorch with CUDA
+pip install torch --index-url https://download.pytorch.org/whl/cu118
+
+# Optional: Install FAISS GPU for faster search
+pip uninstall faiss-cpu && pip install faiss-gpu
+
+# Set environment variable
+DEVICE=auto  # auto-detect and use GPU if available
+```
+
 ---
 
 ## 🏗️ Architecture
@@ -85,16 +159,16 @@ MOSAIC consists of three microservices working in harmony:
 │                        MOSAIC Architecture                          │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                     │
-│  ┌──────────────┐      ┌──────────────┐      ┌─────────────────┐  │
-│  │  mosaic-ui   │      │  mosaic-api  │      │   mosaic-mcp    │  │
-│  │  (Next.js)   │ ───► │  (FastAPI)   │ ───► │   (FastMCP)     │  │
-│  │   Port 3000  │      │   Port 8000  │      │   Port 9090     │  │
-│  └──────────────┘      └──────────────┘      └─────────────────┘  │
+│  ┌──────────────┐      ┌──────────────┐      ┌─────────────────┐    │
+│  │  mosaic-ui   │      │  mosaic-api  │      │   mosaic-mcp    │    │
+│  │  (Next.js)   │ ───► │  (FastAPI)   │ ───► │   (FastMCP)     │    │
+│  │   Port 3000  │      │   Port 8000  │      │   Port 9090     │    │
+│  └──────────────┘      └──────────────┘      └─────────────────┘    │
 │                                                                     │
-│  • User Interface      • REST API            • Video Processing   │
-│  • Video Upload        • LangChain Agent     • Frame Extraction   │
-│  • Chat Interface      • MCP Client          • FAISS + ChromaDB   │
-│  • Search UI           • Task Management     • Search Engine      │
+│  • User Interface      • REST API            • Video Processing     │
+│  • Video Upload        • LangChain Agent     • Frame Extraction     │
+│  • Chat Interface      • MCP Client          • FAISS + ChromaDB     │
+│  • Search UI           • Task Management     • Search Engine        │
 │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘
 ```

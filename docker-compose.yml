@@ -19,6 +19,14 @@ services:
       - .env
     networks:
       - mosaic-network
+    # Uncomment below to enable GPU acceleration (requires nvidia-container-toolkit)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
     healthcheck:
       test:
         [

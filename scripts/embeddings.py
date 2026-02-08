@@ -2,8 +2,21 @@ from sentence_transformers import SentenceTransformer
 from typing import List
 import numpy as np
 from PIL import Image
+import torch
+import os
 
-clip_model = SentenceTransformer('clip-ViT-B-32')
+# Device configuration - Use GPU if available
+DEVICE = os.getenv('DEVICE', 'auto')
+if DEVICE == 'auto':
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+else:
+    device = DEVICE
+
+print(f"🚀 Using device: {device.upper()}")
+if device == 'cuda':
+    print(f"   GPU: {torch.cuda.get_device_name(0)}")
+
+clip_model = SentenceTransformer('clip-ViT-B-32', device=device)
 
 
 def generate_image_embeddings(image_paths: List[str]) -> np.ndarray:

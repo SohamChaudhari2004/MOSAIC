@@ -86,6 +86,38 @@ cp ../.env.example ../.env
 python src/server.py
 ```
 
+## 🚀 GPU Acceleration
+
+**Enable GPU support for 10-50x faster processing:**
+
+```bash
+# Install PyTorch with CUDA
+pip install torch --index-url https://download.pytorch.org/whl/cu118
+
+# Optional: Install FAISS GPU
+pip uninstall faiss-cpu
+pip install faiss-gpu
+
+# Configure device in .env
+DEVICE=auto  # auto-detect GPU, fallback to CPU
+```
+
+**Verify GPU is enabled:**
+
+```bash
+python scripts/gpu.py
+```
+
+Expected output:
+
+```
+🚀 Using device: CUDA
+   GPU: NVIDIA GeForce RTX 3080
+   VRAM: 10.0 GB
+```
+
+> 📖 **Full Guide**: See [../docs/GPU_SETUP.md](../docs/GPU_SETUP.md) for detailed setup, optimization, and troubleshooting
+
 ## 🔌 MCP Tools
 
 The server exposes 9 tools via HTTP at `http://localhost:9090/mcp/v1/tools/`:

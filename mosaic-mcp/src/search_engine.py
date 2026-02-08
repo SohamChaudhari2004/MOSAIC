@@ -9,29 +9,60 @@ import tempfile
 from typing import List, Dict
 import json
 import pprint
+import torch
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Device configuration - Use GPU if available
+DEVICE = os.getenv('DEVICE', 'auto')
+if DEVICE == 'auto':
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+else:
+    device = DEVICE
 
 
 class MultimodalSearchEngine:
     def __init__(self, storage_dir: str = "./storage"):
         self.storage_dir = storage_dir
-        self.clip_model = SentenceTransformer('clip-ViT-B-32')
-        self.text_model = SentenceTransformer('all-MiniLM-L6-v2')
+        self.device = device
+        print(f"🔍 Search Engine using device: {self.device.upper()}")
+        
+        # Load models with GPU support
+        self.clip_model = SentenceTransformer('clip-ViT-B-32', device=self.device)
+        self.text_model = SentenceTransformer('all-MiniLM-L6-v2', device=self.device)
         self.chroma_client = chromadb.PersistentClient(path="./chroma_db")
         self.faiss_index = None
+        self.faiss_gpu_resources = None
         self.frame_paths = []
         self.frame_timestamps = []
 
     def load_faiss_index(self, video_id: str):
         """
         Load FAISS index, frame paths, and timestamps for given video_id.
+        Optionally move to GPU for faster search.
         """
         video_dir = os.path.join(self.storage_dir, video_id)
         faiss_index_path = os.path.join(video_dir, "faiss_index.bin")
 
         if not os.path.exists(faiss_index_path):
-            raise FileNotFoundError(f"FAISS index not found for {video_id}")
+            raise FileNotFoundError(f"FAISS index not found at {faiss_index_path}")
 
-        self.faiss_index = faiss.read_index(faiss_index_path)
+        # Load CPU index from disk
+        cpu_index = faiss.read_index(faiss_index_path)
+        
+        # Try to move to GPU for faster search
+        try:
+            if self.device == 'cuda' and faiss.get_num_gpus() > 0:
+                if self.faiss_gpu_resources is None:
+                    self.faiss_gpu_resources = faiss.StandardGpuResources()
+                self.faiss_index = faiss.index_cpu_to_gpu(self.faiss_gpu_resources, 0, cpu_index)
+                print(f"✓ FAISS index loaded on GPU for video {video_id}")
+            else:
+                self.faiss_index = cpu_index
+        except Exception as e:
+            print(f"⚠ Could not load FAISS on GPU ({e}), using CPU")
+            self.faiss_index = cpu_index
 
         # Load frame paths from frames directory
         frames_dir = os.path.join(video_dir, "frames")
@@ -311,21 +342,51 @@ def get_video_clips_from_hits(
     Returns:
         List of file paths to the extracted clips.
     """
+    print(f"\n=== get_video_clips_from_hits called ===")
+    print(f"Video path: {video_path}")
+    print(f"Output dir: {output_dir}")
+    print(f"Number of hits: {len(hits)}")
+    print(f"Hits type: {type(hits)}")
+    print(f"Hits content: {hits}")
+    
+    if not hits:
+        print("WARNING: No hits provided, returning empty list")
+        return []
+    
     os.makedirs(output_dir, exist_ok=True)
     clip_paths = []
 
     for i, hit in enumerate(hits):
+        # Handle case where hit might be None
+        if hit is None:
+            print(f"Hit #{i+1} is None, skipping")
+            continue
+            
+        # Debug: print hit structure
+        print(f"\nProcessing hit #{i+1}: {hit}")
+        print(f"  Type: {type(hit)}")
+        print(f"  Keys in hit: {list(hit.keys()) if isinstance(hit, dict) else 'Not a dict'}")
+        
         if 'start' in hit and 'end' in hit:  # Transcript hits
             start_time = hit['start']
             end_time = hit['end']
             duration = end_time - start_time
+            # Ensure minimum clip duration
+            if duration < 5:  # If clip is less than 5 seconds, extend it
+                duration = 20  # Default to 20 seconds
+            print(f"  Using transcript timing: start={start_time}, end={end_time}, duration={duration}")
         elif 'clip_start' in hit and 'clip_duration' in hit and hit['clip_start'] is not None:
             start_time = hit['clip_start']
             duration = hit['clip_duration']
+            if duration < 5:
+                duration = 20
+            print(f"  Using clip timing: start={start_time}, duration={duration}")
         elif 'timestamp' in hit and hit['timestamp'] is not None:
             start_time, duration = get_clip_params(hit['timestamp'])
+            print(f"  Using timestamp: start={start_time}, duration={duration}")
         else:
             print(f"Hit #{i+1} missing timing info, skipping clip creation.")
+            print(f"  Expected keys: 'start'+'end', 'clip_start'+'clip_duration', or 'timestamp'")
             continue
 
         output_path = os.path.join(output_dir, f"{prefix}_{i+1}.mp4")

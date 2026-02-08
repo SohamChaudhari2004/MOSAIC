@@ -28,12 +28,25 @@ import json
 import re
 import base64
 import time
+import torch
 
 load_dotenv()
 
-# models 
-clip_model = SentenceTransformer('clip-ViT-B-32')
-text_model = SentenceTransformer('all-MiniLM-L6-v2')
+# Device configuration - Use GPU if available
+DEVICE = os.getenv('DEVICE', 'auto')
+if DEVICE == 'auto':
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+else:
+    device = DEVICE
+
+print(f"🚀 Using device: {device.upper()}")
+if device == 'cuda':
+    print(f"   GPU: {torch.cuda.get_device_name(0)}")
+    print(f"   VRAM: {round(torch.cuda.get_device_properties(0).total_memory / 1024**3, 2)} GB")
+
+# models with GPU support
+clip_model = SentenceTransformer('clip-ViT-B-32', device=device)
+text_model = SentenceTransformer('all-MiniLM-L6-v2', device=device)
 groq_client = Groq(api_key=os.getenv('GROQ_API_KEY'))
 N = 10  # take 1 in every 10th frame
 
@@ -150,28 +163,154 @@ def extract_audio_ffmpeg(video_path: str, output_path: str = None) -> str:
     subprocess.run(cmd, capture_output=True, check=True)
     return output_path
 
-def transcribe_with_groq(audio_path: str, language: str = None) -> Dict:
-    with open(audio_path, "rb") as audio_file:
-        transcription = groq_client.audio.transcriptions.create(
-            file=audio_file,
-            model="whisper-large-v3-turbo",  # Fastest model
-            response_format="verbose_json",
-            timestamp_granularities=["word", "segment"],
-            language=language,
-            temperature=0.0
-        )
+def split_audio_into_chunks(audio_path: str, chunk_duration_sec: int = 600) -> List[Tuple[str, float]]:
+    """
+    Split audio file into chunks of specified duration.
     
-    return {
-        "text": transcription.text,
-        "segments": [
-            {
-                "text": seg.get("text", ""),
-                "start": seg.get("start", 0),
-                "end": seg.get("end", 0)
-            }
-            for seg in transcription.segments
-        ] if hasattr(transcription, 'segments') else []
-    }
+    Args:
+        audio_path: Path to the input audio file
+        chunk_duration_sec: Duration of each chunk in seconds (default 10 minutes)
+    
+    Returns:
+        List of tuples (chunk_path, start_time_offset)
+    """
+    # Get audio duration
+    probe_cmd = [
+        "ffprobe",
+        "-v", "error",
+        "-show_entries", "format=duration",
+        "-of", "csv=p=0",
+        audio_path
+    ]
+    
+    try:
+        duration_result = subprocess.run(probe_cmd, capture_output=True, text=True, check=True)
+        total_duration = float(duration_result.stdout.strip())
+    except:
+        # If we can't get duration, return original file
+        return [(audio_path, 0.0)]
+    
+    # If file is small enough, return as-is
+    if total_duration <= chunk_duration_sec:
+        return [(audio_path, 0.0)]
+    
+    # Split into chunks
+    chunks = []
+    temp_dir = tempfile.mkdtemp()
+    chunk_index = 0
+    start_time = 0.0
+    
+    while start_time < total_duration:
+        chunk_path = os.path.join(temp_dir, f"chunk_{chunk_index:04d}.wav")
+        
+        cmd = [
+            "ffmpeg",
+            "-i", audio_path,
+            "-ss", str(start_time),
+            "-t", str(chunk_duration_sec),
+            "-ar", "16000",
+            "-ac", "1",
+            "-c:a", "pcm_s16le",
+            "-y",
+            chunk_path
+        ]
+        
+        subprocess.run(cmd, capture_output=True, check=True)
+        chunks.append((chunk_path, start_time))
+        
+        start_time += chunk_duration_sec
+        chunk_index += 1
+    
+    return chunks
+
+def transcribe_with_groq(audio_path: str, language: str = None) -> Dict:
+    """
+    Transcribe audio with Groq Whisper, automatically handling large files by chunking.
+    
+    Args:
+        audio_path: Path to audio file
+        language: Optional language code
+    
+    Returns:
+        Dictionary with 'text' and 'segments' keys
+    """
+    # Check file size - if > 20MB, split into chunks (leaving buffer for safety)
+    file_size_mb = os.path.getsize(audio_path) / (1024 * 1024)
+    
+    if file_size_mb > 20:
+        print(f"Audio file is {file_size_mb:.1f}MB, splitting into chunks...")
+        chunks = split_audio_into_chunks(audio_path, chunk_duration_sec=600)  # 10-minute chunks
+        print(f"Split into {len(chunks)} chunks")
+        
+        all_text = []
+        all_segments = []
+        
+        for i, (chunk_path, time_offset) in enumerate(chunks):
+            print(f"Transcribing chunk {i+1}/{len(chunks)}...")
+            
+            try:
+                with open(chunk_path, "rb") as audio_file:
+                    transcription = groq_client.audio.transcriptions.create(
+                        file=audio_file,
+                        model="whisper-large-v3-turbo",
+                        response_format="verbose_json",
+                        timestamp_granularities=["word", "segment"],
+                        language=language,
+                        temperature=0.0
+                    )
+                
+                all_text.append(transcription.text)
+                
+                # Adjust segment timestamps by chunk offset
+                if hasattr(transcription, 'segments'):
+                    for seg in transcription.segments:
+                        all_segments.append({
+                            "text": seg.get("text", ""),
+                            "start": seg.get("start", 0) + time_offset,
+                            "end": seg.get("end", 0) + time_offset
+                        })
+            
+            finally:
+                # Clean up chunk file
+                try:
+                    os.remove(chunk_path)
+                except:
+                    pass
+        
+        # Clean up temp directory
+        try:
+            os.rmdir(os.path.dirname(chunks[0][0]))
+        except:
+            pass
+        
+        return {
+            "text": " ".join(all_text),
+            "segments": all_segments
+        }
+    
+    else:
+        # File is small enough, transcribe directly
+        with open(audio_path, "rb") as audio_file:
+            transcription = groq_client.audio.transcriptions.create(
+                file=audio_file,
+                model="whisper-large-v3-turbo",
+                response_format="verbose_json",
+                timestamp_granularities=["word", "segment"],
+                language=language,
+                temperature=0.0
+            )
+        
+        return {
+            "text": transcription.text,
+            "segments": [
+                {
+                    "text": seg.get("text", ""),
+                    "start": seg.get("start", 0),
+                    "end": seg.get("end", 0)
+                }
+                for seg in transcription.segments
+            ] if hasattr(transcription, 'segments') else []
+        }
 
 
 # Embedding Function
@@ -198,15 +337,27 @@ def generate_text_embeddings(texts: List[str]) -> np.ndarray:
 def store_embeddings_faiss(embeddings: np.ndarray, index_path: str) -> faiss.Index:
     """
     Store image embeddings in FAISS index.
-    Fast similarity search.
+    Fast similarity search with GPU acceleration if available.
     """
     dimension = embeddings.shape[1]
-    index = faiss.IndexFlatL2(dimension)
-    index.add(embeddings.astype('float32'))
+    cpu_index = faiss.IndexFlatL2(dimension)
+    cpu_index.add(embeddings.astype('float32'))
+    
+    # Try to use GPU for FAISS if available
+    try:
+        if device == 'cuda' and faiss.get_num_gpus() > 0:
+            res = faiss.StandardGpuResources()
+            gpu_index = faiss.index_cpu_to_gpu(res, 0, cpu_index)
+            print("✓ FAISS using GPU acceleration")
+            # Save CPU version to disk (GPU index can't be saved directly)
+            faiss.write_index(cpu_index, index_path)
+            return gpu_index
+    except Exception as e:
+        print(f"⚠ FAISS GPU not available ({e}), using CPU")
     
     # Save index to disk
-    faiss.write_index(index, index_path)
-    return index
+    faiss.write_index(cpu_index, index_path)
+    return cpu_index
 
 
 def store_text_chromadb(

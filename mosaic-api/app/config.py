@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(dotenv_path="mosaic\.env")
 
 # MCP Server Configuration
 MCP_SERVER_URL = os.getenv("MCP_SERVER_URL", "http://127.0.0.1:9090")
@@ -10,7 +10,7 @@ MCP_SERVER_URL = os.getenv("MCP_SERVER_URL", "http://127.0.0.1:9090")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 LLM_MODEL = os.getenv("LLM_MODEL", "openai/gpt-oss-120b")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-
+MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
 
 # Storage Configuration - Use absolute paths
 APP_DIR = os.path.dirname(os.path.abspath(__file__))

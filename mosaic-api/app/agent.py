@@ -7,27 +7,29 @@ from langchain_classic.agents import AgentExecutor, create_react_agent
 from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from mcp_client import MCPClient
-from config import GROQ_API_KEY, LLM_MODEL, MCP_SERVER_URL, GEMINI_API_KEY, UPLOAD_DIR
+from config import GROQ_API_KEY, LLM_MODEL,MISTRAL_API_KEY, MCP_SERVER_URL, GEMINI_API_KEY, UPLOAD_DIR
 from typing import Dict, List
 import os
 import json
+from dotenv import load_dotenv
+load_dotenv(dotenv_path="mosaic\.env")
 
 class VideoAgent:
     def __init__(self):
         # Use Gemini which works better with ReAct text-based agents
         # self.llm = ChatGoogleGenerativeAI(
-        #     api_key="AIzaSyBqfZl-zmoPXwq34EXU2T1DD0N7F1cJiHE",
+        #     api_key=os.getenv("GEMINI_API_KEY", GEMINI_API_KEY),
         #     model='gemini-2.0-flash',
         #     temperature=0
         # )
         self.llm = ChatMistralAI(
-            api_key="wdRPqlYhnNnML2PVDygaSZdTgNIuug9A",
+            api_key= os.getenv("MISTRAL_API_KEY") or MISTRAL_API_KEY,
             model='mistral-large-latest',
             temperature=0
         )
         # Alternative: Groq (may have tool choice issues with some models)
         # self.llm = ChatGroq(
-        #     api_key="",
+        #     api_key=os.getenv("GROQ_API_KEY") or GROQ_API_KEY,
         #     model='llama-3.3-70b-versatile',  # Use Llama which works better with ReAct
         #     temperature=0
         # )

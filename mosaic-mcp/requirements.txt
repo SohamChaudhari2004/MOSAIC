@@ -1,9 +1,9 @@
 groq
 langchain
 chromadb
-faiss-cpu
+faiss-cpu  # For GPU: pip uninstall faiss-cpu && pip install faiss-gpu
 transformers
-torch
+torch  # GPU acceleration for embeddings
 sentence-transformers
 opencv-python
 Pillow
