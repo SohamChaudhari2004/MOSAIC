@@ -47,18 +47,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   return (
-    <div className="w-80 border-l border-hal-border bg-black flex flex-col h-full">
-      <div className="p-4 border-b border-hal-border">
-        <h2 className="text-hal-red font-bold text-xl mb-4 tracking-widest">
-          VIDEO LIBRARY
+    <div className="w-80 border-r border-border bg-black flex flex-col h-full relative z-10">
+      <div className="p-4 border-b border-border">
+        <h2 className="text-primary font-bold text-xl mb-4 tracking-widest uppercase">
+          Video Library
         </h2>
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading}
-          className="w-full bg-hal-red text-black font-bold py-2 px-4 rounded bg-red-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+          className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-3 px-4 rounded transition-colors flex items-center justify-center gap-2 disabled:opacity-50 uppercase tracking-wide"
         >
           <Upload size={18} />
-          {isUploading ? "UPLOADING..." : "UPLOAD VIDEO"}
+          {isUploading ? "Uploading..." : "Upload Video"}
         </button>
         <input
           type="file"
@@ -69,70 +69,73 @@ export const Sidebar: React.FC<SidebarProps> = ({
         />
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {videos.map((video) => (
           <motion.div
             key={video.video_id}
-            initial={{ opacity: 0, x: 20 }}
+            initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="border border-hal-border p-2 rounded cursor-pointer hover:bg-hal-dark-red transition-colors group"
+            className="border border-border p-3 rounded cursor-pointer hover:border-primary hover:bg-primary/5 transition-all group"
             onClick={() => onSelectVideo(video)}
           >
-            <div className="aspect-video bg-gray-900 mb-2 flex items-center justify-center relative overflow-hidden">
-              {/* Placeholder for thumbnail if available, or icon */}
+            <div className="aspect-video bg-secondary mb-2 flex items-center justify-center relative overflow-hidden rounded">
               <Film
-                className="text-hal-red opacity-50 group-hover:opacity-100 transition-opacity"
+                className="text-primary/50 group-hover:text-primary/80 transition-colors"
                 size={32}
               />
-              <div className="absolute inset-0 bg-red-900/10 group-hover:bg-red-900/20 transition-colors" />
             </div>
-            <h3 className="text-hal-red text-sm font-mono truncate">
+            <h3 className="text-foreground text-sm font-medium truncate">
               {video.filename || video.video_id}
             </h3>
-            <p className="text-xs text-red-800 font-mono">
-              {video.created_at || "Unknown Date"}
+            <p className="text-xs text-muted-foreground mt-1">
+              {video.video_id}
             </p>
+            {video.created_at && (
+              <p className="text-xs text-muted-foreground">
+                {video.created_at}
+              </p>
+            )}
           </motion.div>
         ))}
 
         {videos.length === 0 && (
-          <div className="text-center text-red-900 mt-10 font-mono text-sm">
-            NO DATA STREAMS DETECTED
+          <div className="text-center text-muted-foreground mt-10 text-sm">
+            No videos uploaded yet
           </div>
         )}
       </div>
 
       {/* Clear Storage Section */}
-      <div className="p-4 border-t border-hal-border">
+      <div className="p-4 border-t border-border">
         {showConfirm ? (
           <div className="space-y-2">
-            <p className="text-red-500 text-xs font-mono text-center">
-              DELETE ALL DATA?
+            <p className="text-primary text-xs font-medium text-center uppercase">
+              Delete All Data?
             </p>
             <div className="flex gap-2">
               <button
                 onClick={handleClearStorage}
                 disabled={isClearing}
-                className="flex-1 bg-red-700 hover:bg-red-600 text-white font-bold py-2 px-3 rounded text-sm transition-colors disabled:opacity-50"
+                className="flex-1 bg-primary hover:bg-primary/90 text-white font-bold py-2 px-3 rounded text-sm transition-colors disabled:opacity-50 uppercase"
               >
-                {isClearing ? "CLEARING..." : "CONFIRM"}
+                {isClearing ? "Clearing..." : "Confirm"}
               </button>
               <button
                 onClick={() => setShowConfirm(false)}
                 disabled={isClearing}
-                className="flex-1 border border-hal-border text-red-500 font-bold py-2 px-3 rounded text-sm hover:bg-red-900/20 transition-colors disabled:opacity-50"
+                className="flex-1 border border-border text-foreground font-bold py-2 px-3 rounded text-sm hover:bg-secondary transition-colors disabled:opacity-50 uppercase"
               >
-                CANCEL
+                Cancel
               </button>
             </div>
           </div>
         ) : (
           <button
             onClick={() => setShowConfirm(true)}
-            className="w-full border border-red-700 text-red-500 font-bold py-2 px-4 rounded hover:bg-red-900/20 transition-colors flex items-center justify-center gap-2"
+            className="w-full border border-border text-primary font-bold py-2 px-4 rounded hover:bg-primary/10 transition-colors flex items-center justify-center gap-2 uppercase tracking-wide"
           >
             <Trash2 size={18} />
-            CLEAR STORAGE
+            Clear Storage
           </button>
         )}
       </div>

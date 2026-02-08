@@ -1,49 +1,131 @@
 @import "tailwindcss";
-:root {
-  --background: #000000;
-  --foreground: #ff0000;
-  --hal-red: #ff0000;
-  --hal-dark-red: #330000;
-  --hal-panel: #0a0a0a;
-  --hal-border: #330000;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+    --primary: 262 83% 58%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 10%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 40%;
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 10%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 262 83% 58%;
+    --radius: 0.5rem;
+    --chart-1: 262 83% 58%;
+    --chart-2: 220 70% 50%;
+    --chart-3: 180 65% 45%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+  }
+
+  .dark {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 85%;
+    --card: 0 0% 5%;
+    --card-foreground: 0 0% 85%;
+    --popover: 0 0% 5%;
+    --popover-foreground: 0 0% 85%;
+    --primary: 0 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 85%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 50%;
+    --accent: 0 80% 35%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 50% 15%;
+    --input: 0 0% 10%;
+    --ring: 0 100% 50%;
+    --chart-1: 0 100% 50%;
+    --chart-2: 0 80% 35%;
+    --chart-3: 0 50% 20%;
+    --chart-4: 0 0% 30%;
+    --chart-5: 0 0% 50%;
+  }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: 'Courier New', Courier, monospace;
-  overflow: hidden;
-}
-
-@layer utilities {
-  .text-hal-red {
-    color: var(--hal-red);
+@layer base {
+  * {
+    border-color: hsl(var(--border));
   }
-  .bg-hal-panel {
-    background-color: var(--hal-panel);
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: var(--font-body);
+    position: relative;
   }
-  .border-hal {
-    border-color: var(--hal-border);
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+      linear-gradient(rgba(128, 128, 128, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(128, 128, 128, 0.03) 1px, transparent 1px);
+    background-size: 24px 24px;
+    pointer-events: none;
+    z-index: 0;
   }
-  .glow-text {
-    text-shadow: 0 0 10px var(--hal-red);
+  .dark body::before {
+    background-image: 
+      linear-gradient(rgba(255, 0, 0, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 0, 0, 0.03) 1px, transparent 1px);
   }
-  .glow-box {
-    box-shadow: 0 0 20px rgba(255, 0, 0, 0.1);
+  h1,
+  h2 {
+    font-family: var(--font-display);
   }
 }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #000;
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #330000;
+  background: hsl(var(--muted-foreground) / 0.3);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #660000;
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* Animation delays */
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-25%);
+  }
+}
+
+.animate-bounce {
+  animation: bounce 1s infinite;
+}
+
+.delay-100 {
+  animation-delay: 0.1s;
+}
+
+.delay-200 {
+  animation-delay: 0.2s;
 }

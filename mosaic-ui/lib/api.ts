@@ -14,12 +14,15 @@ export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   timestamp: string;
+  imageUrl?: string;
+  videoUrl?: string;
+  fileName?: string;
 }
 
 export interface ChatResponse {
   response: string;
   video_id: string;
-  metadata: any;
+  metadata: Record<string, unknown>;
 }
 
 export const api = axios.create({
@@ -49,7 +52,7 @@ export const sendChatMessage = async (
   mediaPath?: string,
   mediaType?: string,
 ) => {
-  const payload: any = { video_id: videoId, message };
+  const payload: Record<string, string> = { video_id: videoId, message };
   if (mediaPath) payload.media_path = mediaPath;
   if (mediaType) payload.media_type = mediaType;
   const response = await api.post("/chat", payload);
