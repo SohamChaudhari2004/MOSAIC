@@ -79,8 +79,8 @@ export default function PricingPage() {
             Simple, transparent pricing
           </h1>
           <p className="mx-auto mb-8 max-w-2xl text-lg text-muted-foreground">
-            Choose the plan thats right for you. All plans include access to
-            our core features.
+            Choose the plan thats right for you. All plans include access to our
+            core features.
           </p>
         </div>
       </section>

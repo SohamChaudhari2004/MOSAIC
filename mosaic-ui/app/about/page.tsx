@@ -43,8 +43,8 @@ export default function AboutPage() {
               </h2>
               <p className="text-lg text-muted-foreground mb-4">
                 Video is one of the richest forms of information, yet it remains
-                difficult to search, analyze, and extract insights from. We&apos;re
-                changing that.
+                difficult to search, analyze, and extract insights from.
+                We&apos;re changing that.
               </p>
               <p className="text-lg text-muted-foreground mb-6">
                 Mosaic empowers individuals and teams to unlock the full
@@ -78,8 +78,8 @@ export default function AboutPage() {
                 </div>
                 <h3 className="text-xl font-semibold mb-2">User-First</h3>
                 <p className="text-muted-foreground">
-                  Every feature we build starts with understanding our users&apos;
-                  needs and challenges.
+                  Every feature we build starts with understanding our
+                  users&apos; needs and challenges.
                 </p>
               </CardContent>
             </Card>
@@ -90,8 +90,8 @@ export default function AboutPage() {
                 </div>
                 <h3 className="text-xl font-semibold mb-2">Innovation</h3>
                 <p className="text-muted-foreground">
-                  We constantly push the boundaries of what&apos;s possible with AI
-                  and video technology.
+                  We constantly push the boundaries of what&apos;s possible with
+                  AI and video technology.
                 </p>
               </CardContent>
             </Card>

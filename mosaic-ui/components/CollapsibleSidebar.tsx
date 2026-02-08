@@ -1,7 +1,19 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { Upload, Film, Trash2, ChevronLeft, ChevronRight, Home, Search, FolderOpen, Clock, Moon, Sun } from "lucide-react";
+import {
+  Upload,
+  Film,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+  Home,
+  Search,
+  FolderOpen,
+  Clock,
+  Moon,
+  Sun,
+} from "lucide-react";
 import { Video, clearStorage } from "@/lib/api";
 import { motion } from "framer-motion";
 import { useTheme } from "@/components/ThemeProvider";

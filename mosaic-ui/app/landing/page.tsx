@@ -20,7 +20,6 @@ import {
   Shield,
   Users,
   ArrowRight,
-  
 } from "lucide-react";
 
 export default function LandingPage() {
@@ -30,7 +29,6 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <section className="container relative overflow-hidden py-20 md:py-32 z-10">
-
         <div className="mx-auto max-w-4xl text-center">
           <Badge className="mb-4" variant="secondary">
             <Sparkles className="mr-1 h-3 w-3" />
@@ -50,13 +48,20 @@ export default function LandingPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/video">
-              <Button size="lg" className="gap-2 bg-primary hover:bg-primary/90">
+              <Button
+                size="lg"
+                className="gap-2 bg-primary hover:bg-primary/90"
+              >
                 Start Analyzing
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
             <Link href="/features">
-              <Button size="lg" variant="outline" className="border-border hover:bg-secondary">
+              <Button
+                size="lg"
+                variant="outline"
+                className="border-border hover:bg-secondary"
+              >
                 Learn More
               </Button>
             </Link>

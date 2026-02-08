@@ -23,7 +23,9 @@ export function Navigation() {
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center space-x-2">
             <Video className="h-8 w-8 text-primary" />
-            <span className="text-xl font-display font-semibold text-primary tracking-wider">MOSAIC</span>
+            <span className="text-xl font-display font-semibold text-primary tracking-wider">
+              MOSAIC
+            </span>
           </Link>
           <div className="hidden md:flex items-center gap-6">
             {navItems.map((item) => (

@@ -169,12 +169,12 @@ export default function VideoAnalysisApp() {
     let userContent = text;
     let imageUrl: string | undefined;
     let fileName: string | undefined;
-    
+
     if (file) {
       const fileType = file.type.startsWith("image/") ? "Image" : "Audio";
       userContent = text || `Uploaded ${fileType.toLowerCase()}`;
       fileName = file.name;
-      
+
       // Create object URL for image preview
       if (file.type.startsWith("image/")) {
         imageUrl = URL.createObjectURL(file);
@@ -201,7 +201,7 @@ export default function VideoAnalysisApp() {
           currentVideo.video_id,
           text || "",
           uploadResult.media_path,
-          uploadResult.media_type
+          uploadResult.media_type,
         );
         responseContent = response.response;
       } else {
@@ -212,9 +212,10 @@ export default function VideoAnalysisApp() {
       // Extract video clip path if present in response
       let videoUrl: string | undefined;
       // Match patterns like: clips_output\a49c37c0\clip_1.mp4 or clip_1.mp4
-      const clipMatch = responseContent.match(/clips_output[\\\/](\w+)[\\\/](clip_\d+\.mp4)/)
-        || responseContent.match(/(clip_\d+\.mp4)/);
-      
+      const clipMatch =
+        responseContent.match(/clips_output[\\\/](\w+)[\\\/](clip_\d+\.mp4)/) ||
+        responseContent.match(/(clip_\d+\.mp4)/);
+
       if (clipMatch) {
         if (clipMatch.length === 3) {
           // Full path match with video ID
@@ -241,7 +242,8 @@ export default function VideoAnalysisApp() {
         ...prev,
         {
           role: "assistant",
-          content: "There was an error processing your request. Please try again.",
+          content:
+            "There was an error processing your request. Please try again.",
           timestamp: new Date().toLocaleTimeString(),
         },
       ]);
@@ -250,7 +252,7 @@ export default function VideoAnalysisApp() {
     }
   };
 
-  const handlePromptClick = (prompt: typeof promptSuggestions[0]) => {
+  const handlePromptClick = (prompt: (typeof promptSuggestions)[0]) => {
     setInput(prompt.title);
   };
 
@@ -280,7 +282,8 @@ export default function VideoAnalysisApp() {
                   Hi there, <span className="text-primary">User</span>
                 </h1>
                 <h2 className="text-3xl md:text-5xl font-display font-normal text-muted-foreground">
-                  What would <span className="text-foreground">like to know?</span>
+                  What would{" "}
+                  <span className="text-foreground">like to know?</span>
                 </h2>
                 <p className="text-sm text-muted-foreground mt-4">
                   {currentVideo
@@ -373,7 +376,7 @@ export default function VideoAnalysisApp() {
                           )}
                         </div>
                       )}
-                      
+
                       {/* Video clip preview for assistant responses */}
                       {message.videoUrl && (
                         <div className="border-b border-border/50 bg-black">
@@ -401,9 +404,11 @@ export default function VideoAnalysisApp() {
                           </div>
                         </div>
                       )}
-                      
+
                       <div className="p-4">
-                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                        <p className="text-sm whitespace-pre-wrap">
+                          {message.content}
+                        </p>
                         <p className="text-xs mt-2 opacity-70">
                           {message.timestamp}
                         </p>
@@ -426,7 +431,7 @@ export default function VideoAnalysisApp() {
                           animationData={loadingAnimation}
                           loop={true}
                           autoplay={true}
-                          style={{ width: '100%', height: '100%' }}
+                          style={{ width: "100%", height: "100%" }}
                         />
                       </div>
                       <motion.p
@@ -482,9 +487,14 @@ export default function VideoAnalysisApp() {
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{attachedFile.name}</p>
+                      <p className="text-sm font-medium truncate">
+                        {attachedFile.name}
+                      </p>
                       <p className="text-xs text-muted-foreground">
-                        {attachedFile.type.startsWith("image/") ? "Image" : "Audio"} • {(attachedFile.size / 1024).toFixed(1)} KB
+                        {attachedFile.type.startsWith("image/")
+                          ? "Image"
+                          : "Audio"}{" "}
+                        • {(attachedFile.size / 1024).toFixed(1)} KB
                       </p>
                     </div>
                     <Button
