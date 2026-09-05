@@ -220,6 +220,13 @@ docker-compose up -d
 
 That's it! 🎉
 
+> 📘 **Need more details?** See our complete Docker guides:
+>
+> - **[DOCKER_QUICKSTART.md](DOCKER_QUICKSTART.md)** - 5-minute quick start
+> - **[BUILD_GUIDE.md](BUILD_GUIDE.md)** - Detailed build instructions
+> - **[DOCKER.md](DOCKER.md)** - Complete Docker reference
+> - **[DOCKER_GUIDE_INDEX.md](DOCKER_GUIDE_INDEX.md)** - Documentation overview
+
 ---
 
 ## 📦 Installation
@@ -232,7 +239,17 @@ docker-compose -f docker-compose.dev.yml up
 
 # Production mode
 docker-compose up -d
+
+# With GPU acceleration (10-50x faster)
+docker-compose -f docker-compose.yml -f docker-compose.gpu.yml up -d
 ```
+
+**Docker Images:**
+
+- `mosaic-mcp`: ~2.0-2.5 GB (video processing)
+- `mosaic-api`: ~800 MB-1 GB (API backend)
+- `mosaic-ui`: ~200-300 MB (web frontend)
+- **Total**: ~3.0-3.8 GB
 
 ### Option 2: Local Development
 

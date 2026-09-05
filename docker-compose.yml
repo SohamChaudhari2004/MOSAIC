@@ -1,32 +1,77 @@
+# =============================================================================
+# MOSAIC - Docker Compose Configuration (Production)
+# =============================================================================
+# This file defines the production setup for MOSAIC video analysis platform
+# with three microservices: MCP Server, API Server, and Frontend.
+#
+# Usage:
+#   docker-compose build              # Build all images
+#   docker-compose up -d              # Start in detached mode
+#   docker-compose logs -f            # View logs
+#   docker-compose down               # Stop and remove containers
+#   docker-compose down -v            # Stop and remove volumes (DATA LOSS!)
+#
+# For development with hot-reload:
+#   docker-compose -f docker-compose.dev.yml up
+#
+# For GPU acceleration:
+#   docker-compose -f docker-compose.yml -f docker-compose.gpu.yml up -d
+#
+# Documentation: See DOCKER.md for detailed instructions
+# =============================================================================
+
 version: "3.8"
 
 services:
+  # ===========================================================================
+  # MCP SERVER - Video Processing & Vector Search Backend
+  # ===========================================================================
+  # Purpose: Handles video processing, frame extraction, embeddings generation,
+  #          and vector search using FAISS and ChromaDB
+  # Port: 9090 (internal and external)
+  # Dependencies: None (base service)
+  # ===========================================================================
   mcp-server:
     build:
       context: ./mosaic-mcp
       dockerfile: Dockerfile
     container_name: mosaic-mcp
-    restart: unless-stopped
+    restart: unless-stopped # Auto-restart unless manually stopped
+
+    # Port mapping: host:container
     ports:
       - "9090:9090"
+
+    # Persistent storage volumes
     volumes:
-      - storage_data:/app/storage
-      - chroma_data:/app/src/chroma_db
+      - storage_data:/app/storage # Shared video uploads & frames
+      - chroma_data:/app/src/chroma_db # Vector database persistence
+
+    # Environment variables
     environment:
-      - LOG_LEVEL=INFO
-      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=INFO # Logging level (DEBUG, INFO, WARNING, ERROR)
+      - PYTHONUNBUFFERED=1 # Real-time Python output
+
+    # Load additional variables from .env file
     env_file:
       - .env
+
+    # Connect to shared network
     networks:
       - mosaic-network
-    # Uncomment below to enable GPU acceleration (requires nvidia-container-toolkit)
+
+    # GPU acceleration (requires nvidia-container-toolkit)
+    # Uncomment to enable NVIDIA GPU support:
     # deploy:
     #   resources:
     #     reservations:
     #       devices:
     #         - driver: nvidia
-    #           count: 1
-    #           capabilities: [gpu]
+    #           count: 1              # Number of GPUs (or 'all')
+    #           capabilities: [gpu]   # GPU capabilities
+
+    # Health check configuration
+    # Ensures service is ready before dependent services start
     healthcheck:
       test:
         [
@@ -35,68 +80,171 @@ services:
           "-c",
           "import requests; requests.get('http://localhost:9090/health')",
         ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
+      interval: 30s # Check every 30 seconds
+      timeout: 10s # Timeout after 10 seconds
+      retries: 3 # Retry 3 times before marking unhealthy
+      start_period: 60s # Give 60s for model loading on startup
 
+  # ===========================================================================
+  # API SERVER - FastAPI Backend with LangChain Agent
+  # ===========================================================================
+  # Purpose: REST API endpoints, LangChain ReAct agent orchestration,
+  #          MCP client for tool integration
+  # Port: 8000 (internal and external)
+  # Dependencies: mcp-server (must be healthy)
+  # ===========================================================================
   api-server:
     build:
       context: ./mosaic-api
       dockerfile: Dockerfile
     container_name: mosaic-api
     restart: unless-stopped
+
+    # Port mapping
     ports:
       - "8000:8000"
+
+    # Wait for MCP server to be healthy before starting
     depends_on:
       mcp-server:
         condition: service_healthy
+
+    # Persistent storage volumes
     volumes:
-      - storage_data:/app/storage
-      - clips_data:/app/clips_output
+      - storage_data:/app/storage # Shared storage with MCP server
+      - clips_data:/app/clips_output # Generated video clips
+
+    # Environment variables
     environment:
-      - MCP_SERVER_URL=http://mcp-server:9090
-      - DATABASE_URL=sqlite:///./storage/mosaic.db
+      - MCP_SERVER_URL=http://mcp-server:9090 # Internal DNS (container name)
+      - DATABASE_URL=sqlite:///./storage/mosaic.db # SQLite database path
       - PYTHONUNBUFFERED=1
+
+    # Load additional variables from .env
     env_file:
       - .env
+
+    # Connect to shared network
     networks:
       - mosaic-network
+
+    # Health check
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 40s # 40s startup grace period
 
+  # ===========================================================================
+  # FRONTEND - Next.js Web Interface
+  # ===========================================================================
+  # Purpose: User interface for video upload, chat interaction, and visualization
+  # Port: 3000 (internal and external)
+  # Dependencies: api-server (must be healthy)
+  # ===========================================================================
   frontend:
     build:
       context: ./mosaic-ui
       dockerfile: Dockerfile
     container_name: mosaic-ui
     restart: unless-stopped
+
+    # Port mapping
     ports:
       - "3000:3000"
+
+    # Wait for API server to be ready
     depends_on:
       api-server:
         condition: service_healthy
+
+    # Environment variables
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8000
-      - NEXT_TELEMETRY_DISABLED=1
-      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://localhost:8000 # Browser-side API URL (use localhost!)
+      - NEXT_TELEMETRY_DISABLED=1 # Disable Next.js telemetry
+      - NODE_ENV=production # Production mode
+
+    # Load additional variables from .env
     env_file:
       - .env
+
+    # Connect to shared network
     networks:
       - mosaic-network
 
+    # Note: No health check needed for frontend
+    # Browser will show errors if API is unavailable
+
+# =============================================================================
+# NETWORKS
+# =============================================================================
+# Isolated bridge network for inter-container communication
+# Containers can reach each other using service names as hostnames
+# =============================================================================
 networks:
   mosaic-network:
     driver: bridge
+    # Optional: Custom network configuration
+    # ipam:
+    #   config:
+    #     - subnet: 172.28.0.0/16
 
+# =============================================================================
+# VOLUMES
+# =============================================================================
+# Named volumes for data persistence across container restarts
+# Location: /var/lib/docker/volumes/mosaic_<volume-name>\_data
+# =============================================================================
 volumes:
+  # Shared storage for video uploads and extracted frames
+  # Used by: mcp-server (read/write), api-server (read-only)
+  # Typical size: 1-100 GB depending on usage
   storage_data:
     driver: local
+
+  # ChromaDB vector database storage
+  # Used by: mcp-server only
+  # Typical size: 100 MB - 10 GB
   chroma_data:
     driver: local
+
+  # Generated video clips and processed outputs
+  # Used by: api-server only
+  # Typical size: 1-50 GB
   clips_data:
     driver: local
+# =============================================================================
+# ESTIMATED RESOURCE USAGE
+# =============================================================================
+# Image Sizes:
+#   - mosaic-mcp:  ~2.0-2.5 GB (includes PyTorch, transformers)
+#   - mosaic-api:  ~800 MB-1 GB (includes LangChain, FastAPI)
+#   - mosaic-ui:   ~200-300 MB (optimized Next.js build)
+#   Total:         ~3.0-3.8 GB
+#
+# Runtime Memory:
+#   - mosaic-mcp:  2-4 GB (depends on video processing load)
+#   - mosaic-api:  512 MB-1 GB
+#   - mosaic-ui:   256-512 MB
+#   Total:         3-6 GB recommended
+#
+# Storage:
+#   - Docker images: ~4 GB
+#   - Volumes: 1-100 GB (depends on usage)
+#   - Total: 10-20 GB free space recommended
+# =============================================================================
+
+# =============================================================================
+# TROUBLESHOOTING
+# =============================================================================
+# Common commands:
+#   docker-compose ps                  # Check service status
+#   docker-compose logs -f             # View logs
+#   docker-compose logs mcp-server     # View specific service logs
+#   docker stats                       # Monitor resource usage
+#   docker-compose restart api-server  # Restart specific service
+#   docker-compose down -v             # Reset everything (deletes data!)
+#
+# See DOCKER.md for comprehensive troubleshooting guide
+# =============================================================================

@@ -1,92 +1,196 @@
+# =============================================================================
+# MOSAIC - Docker Compose Configuration (Development)
+# =============================================================================
+# Development environment with hot-reload enabled for all services.
+# Source code is mounted as volumes, so changes reflect immediately without
+# rebuilding images.
+#
+# Usage:
+#   docker-compose -f docker-compose.dev.yml up        # Start with logs
+#   docker-compose -f docker-compose.dev.yml up -d     # Start in background
+#   docker-compose -f docker-compose.dev.yml down      # Stop services
+#
+# Or use make:
+#   make dev      # Start in foreground
+#   make dev-d    # Start in background
+#
+# Features:
+#   - Hot-reload: Code changes reflect immediately
+#   - Debug logging: LOG_LEVEL=DEBUG for all services
+#   - Source code mounted: No rebuild needed for code changes
+#   - Development commands: --reload, npm run dev
+#
+# Note: Do NOT use this in production! Use docker-compose.yml instead.
+# =============================================================================
+
 version: "3.8"
 
 services:
+  # ===========================================================================
+  # MCP SERVER - Development Mode
+  # ===========================================================================
+  # Changes to mosaic-mcp/src/ will reload the server automatically
+  # ===========================================================================
   mcp-server:
     build:
       context: ./mosaic-mcp
       dockerfile: Dockerfile
     container_name: mosaic-mcp-dev
     restart: unless-stopped
+
     ports:
       - "9090:9090"
+
     volumes:
-      # Mount source code for hot reload
-      - ./mosaic-mcp/src:/app/src
-      - ./mosaic-mcp/tests:/app/tests
-      - ./storage:/app/storage
-      - ./mosaic-mcp/src/chroma_db:/app/src/chroma_db
+      # Mount source code for hot-reload (read-write)
+      - ./mosaic-mcp/src:/app/src:rw
+      - ./mosaic-mcp/tests:/app/tests:rw
+
+      # Use host directory for development (easier to inspect)
+      - ./storage:/app/storage:rw
+      - ./mosaic-mcp/src/chroma_db:/app/src/chroma_db:rw
+
     environment:
-      - LOG_LEVEL=DEBUG
-      - PYTHONUNBUFFERED=1
-      - WATCHFILES_FORCE_POLLING=true
+      - LOG_LEVEL=DEBUG # Verbose logging for debugging
+      - PYTHONUNBUFFERED=1 # Real-time output
+      - WATCHFILES_FORCE_POLLING=true # File watching for hot-reload
+
     env_file:
       - .env
+
     networks:
       - mosaic-network
+
+    # Use Python directly (no uvicorn) for clearer debugging
     command: ["python", "-u", "src/server.py"]
 
+    # Note: No health check in dev mode for faster restarts
+
+  # ===========================================================================
+  # API SERVER - Development Mode
+  # ===========================================================================
+  # Changes to mosaic-api/app/ will auto-reload the FastAPI server
+  # ===========================================================================
   api-server:
     build:
       context: ./mosaic-api
       dockerfile: Dockerfile
     container_name: mosaic-api-dev
     restart: unless-stopped
+
     ports:
       - "8000:8000"
+
+    # No health check dependency in dev for faster iteration
     depends_on:
       - mcp-server
+
     volumes:
-      # Mount source code for hot reload
-      - ./mosaic-api/app:/app/app
-      - ./mosaic-api/tests:/app/tests
-      - ./storage:/app/storage
-      - ./mosaic-api/clips_output:/app/clips_output
+      # Mount source code for hot-reload
+      - ./mosaic-api/app:/app/app:rw
+      - ./mosaic-api/tests:/app/tests:rw
+
+      # Use host directory for development
+      - ./storage:/app/storage:rw
+      - ./mosaic-api/clips_output:/app/clips_output:rw
+
     environment:
       - MCP_SERVER_URL=http://mcp-server:9090
       - DATABASE_URL=sqlite:///./storage/mosaic.db
       - PYTHONUNBUFFERED=1
-      - LOG_LEVEL=DEBUG
+      - LOG_LEVEL=DEBUG # Debug logging
+
     env_file:
       - .env
+
     networks:
       - mosaic-network
-    command:
-      [
+
+    # Use uvicorn with --reload for auto-restart on code changes
+    command: [
         "uvicorn",
         "app.api:app",
         "--host",
         "0.0.0.0",
         "--port",
         "8000",
-        "--reload",
+        "--reload", # Enable auto-reload
+        "--log-level",
+        "debug", # Verbose uvicorn logs
       ]
 
+  # ===========================================================================
+  # FRONTEND - Development Mode
+  # ===========================================================================
+  # Changes to mosaic-ui/ will trigger Next.js Fast Refresh
+  # ===========================================================================
   frontend:
     build:
       context: ./mosaic-ui
       dockerfile: Dockerfile
-      target: deps # Use deps stage for development
+      target: deps # Use deps stage (faster dev build)
     container_name: mosaic-ui-dev
     restart: unless-stopped
+
     ports:
       - "3000:3000"
+
     depends_on:
       - api-server
+
     volumes:
-      # Mount source code for hot reload
-      - ./mosaic-ui:/app
+      # Mount entire UI directory for hot-reload
+      - ./mosaic-ui:/app:rw
+
+      # Important: Exclude node_modules and .next from host
+      # These should use container's versions for correct dependencies
       - /app/node_modules
       - /app/.next
+
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:8000
       - NEXT_TELEMETRY_DISABLED=1
-      - NODE_ENV=development
+      - NODE_ENV=development # Development mode
+      - WATCHPACK_POLLING=true # Enable polling for file changes
+
     env_file:
       - .env
+
     networks:
       - mosaic-network
+
+    # Run Next.js dev server with hot-reload
     command: ["npm", "run", "dev"]
 
+# =============================================================================
+# NETWORKS
+# =============================================================================
 networks:
   mosaic-network:
     driver: bridge
+# =============================================================================
+# NOTES FOR DEVELOPMENT
+# =============================================================================
+# 1. No persistent volumes used - all data in host ./storage directory
+#    This makes it easier to inspect and debug stored data
+#
+# 2. Hot-reload enabled for all services:
+#    - Python: Uvicorn --reload watches for .py file changes
+#    - Next.js: Fast Refresh for React components
+#
+# 3. Debug logging enabled:
+#    - LOG_LEVEL=DEBUG for verbose output
+#    - Easier to trace issues during development
+#
+# 4. No health checks:
+#    - Faster startup and restart times
+#    - Services start regardless of dependencies' health
+#
+# 5. Performance notes:
+#    - File watching may be slower on Windows/macOS due to VM overhead
+#    - Consider using native Linux if experiencing slow file sync
+#
+# 6. Switching between dev and prod:
+#    docker-compose -f docker-compose.dev.yml down
+#    docker-compose -f docker-compose.yml up -d
+# =============================================================================
