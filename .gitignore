@@ -46,7 +46,7 @@ Thumbs.db
 *.log
 
 # Media files
-*.mp4
+
 *.webm
 *.m4a
 my_video.mp4.webm
